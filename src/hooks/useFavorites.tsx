@@ -4,7 +4,9 @@ import {
   addToFavorites,
   removeFromFavorites,
   getFavorites,
-  subscribeToFavorites
+  subscribeToFavorites,
+  incrementFavoriteCount,
+  decrementFavoriteCount
 } from "../services/firebase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -43,6 +45,7 @@ export const useFavorites = () => {
     try {
       if (favorites.includes(recipeId)) {
         await removeFromFavorites(recipeId);
+        await decrementFavoriteCount();
         toast({
           title: "Removed from Favorites",
           description: "Recipe removed from your favorites",
@@ -50,6 +53,7 @@ export const useFavorites = () => {
         });
       } else {
         await addToFavorites(recipeId);
+        await incrementFavoriteCount();
         toast({
           title: "Added to Favorites",
           description: "Recipe added to your favorites",

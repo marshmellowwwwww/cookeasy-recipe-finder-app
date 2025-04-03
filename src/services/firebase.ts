@@ -22,7 +22,9 @@ import {
   serverTimestamp,
   increment,
   getDoc,
-  setDoc
+  setDoc,
+  deleteDoc,
+  orderBy
 } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
@@ -87,16 +89,88 @@ export const addRecipe = async (recipe: {
       updatedAt: serverTimestamp(),
     };
     
-    return await addDoc(collection(db, "recipes"), recipeWithUser);
+    const docRef = await addDoc(collection(db, "recipes"), recipeWithUser);
+    
+    // Increment recipe count in stats
+    await incrementRecipeCount();
+    
+    return docRef;
   } catch (error) {
     console.error("Error adding recipe", error);
     throw error;
   }
 };
 
-export const getRecipes = async () => {
+export const updateRecipe = async (
+  recipeId: string, 
+  updates: {
+    title?: string;
+    ingredients?: string[];
+    steps?: string[];
+    tags?: string[];
+  }
+) => {
   try {
-    const querySnapshot = await getDocs(collection(db, "recipes"));
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
+    
+    // Check if user is the creator of the recipe
+    const recipeRef = doc(db, "recipes", recipeId);
+    const recipeSnap = await getDoc(recipeRef);
+    
+    if (!recipeSnap.exists()) throw new Error("Recipe not found");
+    
+    const recipeData = recipeSnap.data();
+    if (recipeData.userId !== user.uid) throw new Error("Not authorized to edit this recipe");
+    
+    // Update recipe
+    await updateDoc(recipeRef, {
+      ...updates,
+      updatedAt: serverTimestamp()
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating recipe", error);
+    throw error;
+  }
+};
+
+export const deleteRecipe = async (recipeId: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
+    
+    // Check if user is the creator of the recipe
+    const recipeRef = doc(db, "recipes", recipeId);
+    const recipeSnap = await getDoc(recipeRef);
+    
+    if (!recipeSnap.exists()) throw new Error("Recipe not found");
+    
+    const recipeData = recipeSnap.data();
+    if (recipeData.userId !== user.uid) throw new Error("Not authorized to delete this recipe");
+    
+    // Delete recipe
+    await deleteDoc(recipeRef);
+    
+    // Decrement recipe count in stats
+    await decrementRecipeCount();
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting recipe", error);
+    throw error;
+  }
+};
+
+export const getRecipes = async (sortBy = "createdAt", sortOrder = "desc") => {
+  try {
+    const q = query(
+      collection(db, "recipes"), 
+      orderBy(sortBy, sortOrder === "desc" ? "desc" : "asc")
+    );
+    
+    const querySnapshot = await getDocs(q);
     const recipes: any[] = [];
     querySnapshot.forEach((doc) => {
       recipes.push({ id: doc.id, ...doc.data() });
@@ -242,6 +316,86 @@ export const incrementSearchCount = async () => {
   }
 };
 
+export const incrementRecipeCount = async () => {
+  try {
+    const statsRef = doc(db, "stats", "recipes");
+    const statsDoc = await getDoc(statsRef);
+    
+    if (!statsDoc.exists()) {
+      await setDoc(statsRef, { count: 1 });
+    } else {
+      await updateDoc(statsRef, {
+        count: increment(1)
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error incrementing recipe count", error);
+    throw error;
+  }
+};
+
+export const decrementRecipeCount = async () => {
+  try {
+    const statsRef = doc(db, "stats", "recipes");
+    const statsDoc = await getDoc(statsRef);
+    
+    if (!statsDoc.exists()) {
+      await setDoc(statsRef, { count: 0 });
+    } else {
+      await updateDoc(statsRef, {
+        count: increment(-1)
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error decrementing recipe count", error);
+    throw error;
+  }
+};
+
+export const incrementFavoriteCount = async () => {
+  try {
+    const statsRef = doc(db, "stats", "favorites");
+    const statsDoc = await getDoc(statsRef);
+    
+    if (!statsDoc.exists()) {
+      await setDoc(statsRef, { count: 1 });
+    } else {
+      await updateDoc(statsRef, {
+        count: increment(1)
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error incrementing favorite count", error);
+    throw error;
+  }
+};
+
+export const decrementFavoriteCount = async () => {
+  try {
+    const statsRef = doc(db, "stats", "favorites");
+    const statsDoc = await getDoc(statsRef);
+    
+    if (!statsDoc.exists()) {
+      await setDoc(statsRef, { count: 0 });
+    } else {
+      await updateDoc(statsRef, {
+        count: increment(-1)
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error decrementing favorite count", error);
+    throw error;
+  }
+};
+
 export const getSearchCount = async () => {
   try {
     const statsDoc = await getDoc(doc(db, "stats", "searches"));
@@ -250,6 +404,30 @@ export const getSearchCount = async () => {
     return statsDoc.data().count || 0;
   } catch (error) {
     console.error("Error getting search count", error);
+    throw error;
+  }
+};
+
+export const getRecipeCount = async () => {
+  try {
+    const statsDoc = await getDoc(doc(db, "stats", "recipes"));
+    if (!statsDoc.exists()) return 0;
+    
+    return statsDoc.data().count || 0;
+  } catch (error) {
+    console.error("Error getting recipe count", error);
+    throw error;
+  }
+};
+
+export const getFavoriteCount = async () => {
+  try {
+    const statsDoc = await getDoc(doc(db, "stats", "favorites"));
+    if (!statsDoc.exists()) return 0;
+    
+    return statsDoc.data().count || 0;
+  } catch (error) {
+    console.error("Error getting favorite count", error);
     throw error;
   }
 };

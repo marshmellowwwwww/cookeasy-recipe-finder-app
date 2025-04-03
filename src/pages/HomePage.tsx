@@ -2,10 +2,21 @@
 import { useState } from "react";
 import SearchBar from "../components/SearchBar";
 import RecipeCard from "../components/RecipeCard";
-import { useRecipes } from "../hooks/useRecipes";
+import { useRecipes, SortOption, SortOrder } from "../hooks/useRecipes";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowUpDown, Calendar, Tag } from "lucide-react";
 
 export default function HomePage() {
-  const { filteredRecipes, loading, searchRecipes, filterByTag } = useRecipes();
+  const { 
+    filteredRecipes, 
+    loading, 
+    searchRecipes, 
+    filterByTag, 
+    sortBy, 
+    sortOrder,
+    setSorting 
+  } = useRecipes();
   const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = async (searchTerm: string) => {
@@ -20,9 +31,58 @@ export default function HomePage() {
     setIsSearching(false);
   };
 
+  const handleSortChange = (value: string) => {
+    const [field, order] = value.split('-') as [SortOption, SortOrder];
+    setSorting(field, order);
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8">
-      <SearchBar onSearch={handleSearch} onTagFilter={handleTagFilter} />
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <SearchBar onSearch={handleSearch} onTagFilter={handleTagFilter} />
+        
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-gray-500" />
+          <Select 
+            onValueChange={handleSortChange}
+            defaultValue={`${sortBy}-${sortOrder}`}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt-desc">
+                <span className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Newest first
+                </span>
+              </SelectItem>
+              <SelectItem value="createdAt-asc">
+                <span className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Oldest first
+                </span>
+              </SelectItem>
+              <SelectItem value="title-asc">
+                <span className="flex items-center gap-2">
+                  A to Z
+                </span>
+              </SelectItem>
+              <SelectItem value="title-desc">
+                <span className="flex items-center gap-2">
+                  Z to A
+                </span>
+              </SelectItem>
+              <SelectItem value="tag-asc">
+                <span className="flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  By tag (A-Z)
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       
       {loading || isSearching ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 py-8">
