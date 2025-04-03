@@ -72,8 +72,7 @@ export default function Sidebar() {
           "fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out",
           {
             "translate-x-0": isOpen,
-            "-translate-x-full": !isOpen && window.innerWidth < 768,
-            "translate-x-0": window.innerWidth >= 768,
+            "-translate-x-full md:translate-x-0": !isOpen
           }
         )}
       >
