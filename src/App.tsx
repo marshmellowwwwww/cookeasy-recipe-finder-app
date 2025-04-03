@@ -13,6 +13,7 @@ import AddRecipePage from "./pages/AddRecipePage";
 import FavoritesPage from "./pages/FavoritesPage";
 import DashboardPage from "./pages/DashboardPage";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -25,9 +26,10 @@ const App = () => (
           <Sonner />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<Index />} />
             
             <Route element={<Layout />}>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/home" element={<HomePage />} />
               <Route path="/add-recipe" element={<AddRecipePage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
