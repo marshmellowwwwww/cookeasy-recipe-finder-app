@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { loginWithEmail, registerWithEmail } from "../services/firebase";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +38,9 @@ export default function LoginForm() {
         description: "Welcome back to CookEasy",
         duration: 3000,
       });
+      
+      // Redirect to home page after successful login
+      navigate("/");
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -80,6 +85,9 @@ export default function LoginForm() {
         description: "Welcome to CookEasy",
         duration: 3000,
       });
+      
+      // Redirect to home page after successful registration
+      navigate("/");
     } catch (error: any) {
       toast({
         title: "Registration failed",
