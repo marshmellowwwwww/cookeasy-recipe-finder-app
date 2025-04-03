@@ -24,21 +24,24 @@ import {
   getDoc,
   setDoc
 } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
 
-// For a real app, these would be environment variables
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyD5vwAIhvMB4FJgITArwXvY_nXPncvnOkY",
-  authDomain: "cookeasy-app.firebaseapp.com",
-  projectId: "cookeasy-app",
-  storageBucket: "cookeasy-app.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:a1b2c3d4e5f6a7b8c9d0e1"
+  apiKey: "AIzaSyD1iQ2GOyWvnoWLk6yLyh-sUZFrHeMMJyE",
+  authDomain: "recipeapp-7fd70.firebaseapp.com",
+  projectId: "recipeapp-7fd70",
+  storageBucket: "recipeapp-7fd70.firebasestorage.app",
+  messagingSenderId: "637982951148",
+  appId: "1:637982951148:web:1ca2838e7b9e020063c7c9",
+  measurementId: "G-1CX3D518DN"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const analytics = getAnalytics(app);
 
 // Auth functions
 export const loginWithEmail = async (email: string, password: string) => {
